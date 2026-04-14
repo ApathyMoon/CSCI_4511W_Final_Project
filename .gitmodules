@@ -1,0 +1,15 @@
+[submodule "submodules/balatrobot"]
+	path = submodules/balatrobot
+	url = https://github.com/coder/balatrobot.git
+[submodule "submodules/balatro-rs"]
+	path = submodules/balatro-rs
+	url = https://github.com/evanofslack/balatro-rs.git
+[submodule "submodules/treys"]
+	path = submodules/treys
+	url = https://github.com/traderbagel/treys.git
+[submodule "submodules/single-player-mcts"]
+	path = submodules/single-player-mcts
+	url = https://github.com/FelixOpolka/Single-Player-MCTS.git
+[submodule "submodules/expectiminimax"]
+	path = submodules/expectiminimax
+	url = https://github.com/cedricongjh/2048-AI.git
