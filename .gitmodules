@@ -1,6 +1,6 @@
 [submodule "submodules/balatro-rs"]
 	path = submodules/balatro-rs
-	url = https://github.com/evanofslack/balatro-rs.git
+	url = https://github.com/ApathyMoon/balatro-rs.git
 [submodule "submodules/treys"]
 	path = submodules/treys
 	url = https://github.com/traderbagel/treys.git
