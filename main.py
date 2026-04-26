@@ -111,20 +111,38 @@ class Config(object)
 
 import pylatro
 import expectimax
+import expectimax_parallel
 import time
 
-if __name__ == "__main__":
-    print("Running Expectimax...")
-
-    config = pylatro.Config()
-    #config.ante_end = 1
+def run_expectimax_once(algo, config=None, depth=3, sample=5, timing=True, printing=None):
     game = pylatro.GameEngine(config)
+    if printing: print("Running " + printing + "...")
+    if timing: start = time.perf_counter()
+    score, win, state = algo(game, depth, sample)
+    if timing: end = time.perf_counter()
+    if printing: 
+        print(score, win, "\n", state)
+        print(printing + " Finished")
+        print(f"Time: {end - start:.2f} seconds")
+        print()
 
-    start = time.perf_counter()
-    score, win = expectimax.run_expectimax(game, depth=3)
-    end = time.perf_counter()
+    return score, win, state, start, end
 
-    print("Expectimax finished")
-    print(score, win)
-    print(f"Time: {end - start:.2f} seconds")
+def run_expectimax_until_win(algo, config=None, depth=3, sample=5, timing=True, printing=None):
+    while True:
+        game = pylatro.GameEngine(config)
+        if printing: print("Running " + printing + "...")
+        if timing: start = time.perf_counter()
+        score, win, state = algo(game, depth, sample)
+        if timing: end = time.perf_counter()
+        if printing: 
+            print(score, win, "\n", state)
+            print(printing + " Finished")
+            print(f"Time: {end - start:.2f} seconds")
+            print()
+        if win: break
 
+    return score, win, state, start, end
+
+if __name__ == "__main__":
+    run_expectimax_once(expectimax_parallel.run_expectimax, config=None, depth=3, sample=-1, timing=True, printing="Parallel Expectimax")
