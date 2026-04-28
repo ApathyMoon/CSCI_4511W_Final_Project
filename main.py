@@ -40,7 +40,7 @@ class Config(object)
      |                                                                                                                                                                                                                                                                                                                 
      |  Methods defined here:                                                                                                                                                                                                                                                                                          
      |
-     |  copy() -> added by Joshua Moellers
+     |  clone() -> added by Joshua Moellers
      |                                                                                                                                                                                                                                                                                                                 
      |  gen_action_space(self, /)                                                                                                                                                                                                                                                                                      
      |                                                                                                                                                                                                                                                                                                                 
@@ -111,38 +111,58 @@ class Config(object)
 
 import pylatro
 import expectimax
-import expectimax_parallel
 import time
+import csv
+import multiprocessing
 
-def run_expectimax_once(algo, config=None, depth=3, sample=5, timing=True, printing=None):
-    game = pylatro.GameEngine(config)
-    if printing: print("Running " + printing + "...")
-    if timing: start = time.perf_counter()
-    score, win, state = algo(game, depth, sample)
-    if timing: end = time.perf_counter()
-    if printing: 
-        print(score, win, "\n", state)
-        print(printing + " Finished")
-        print(f"Time: {end - start:.2f} seconds")
-        print()
+def expectimax_worker_task(task_id):
+    game = pylatro.GameEngine()
+    start = time.perf_counter()
+    state, win, nodes = expectimax.run_expectimax(game, depth=5, sample=16)
+    end = time.perf_counter()
+    runtime = end - start
+    num_plays = 0
+    num_discards = 0
+    for action in state.action_history:
+        if "Play" in str(action):
+            num_plays += 1
+        if "Discard" in str(action):
+            num_discards += 1
+    print(f"Game {task_id} finished")
+    return task_id, state.score, state.round, num_plays, num_discards, len(state.action_history), nodes, round(runtime, 4), win
 
-    return score, win, state, start, end
+def run_and_record_expectimax(n=100):
+    header = ['id,', 'score', 'round', 'plays', 'discards', 'action_history_length', 'nodes_expanded', 'runtime', 'win']
+    num_threads = 32
 
-def run_expectimax_until_win(algo, config=None, depth=3, sample=5, timing=True, printing=None):
-    while True:
-        game = pylatro.GameEngine(config)
-        if printing: print("Running " + printing + "...")
-        if timing: start = time.perf_counter()
-        score, win, state = algo(game, depth, sample)
-        if timing: end = time.perf_counter()
-        if printing: 
-            print(score, win, "\n", state)
-            print(printing + " Finished")
-            print(f"Time: {end - start:.2f} seconds")
-            print()
-        if win: break
+    with multiprocessing.Pool(processes=num_threads) as pool:
+        results = pool.map(expectimax_worker_task, range(n))
 
-    return score, win, state, start, end
+        with open('expectimax_results.csv', 'w', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(header)
+
+            for (id, score, round, plays, discards, action_len, nodes, runtime, win) in results:
+                writer.writerow([
+                    id,
+                    score, 
+                    round, 
+                    plays, 
+                    discards, 
+                    action_len, 
+                    nodes, 
+                    runtime,
+                    win])
 
 if __name__ == "__main__":
-    run_expectimax_once(expectimax_parallel.run_expectimax, config=None, depth=3, sample=-1, timing=True, printing="Parallel Expectimax")
+    # config = pylatro.Config()
+    # config.ante_end = 1
+    # run_expectimax_once(
+    #     expectimax_parallel.run_expectimax, 
+    #     config=config, 
+    #     depth=3, 
+    #     sample=8, 
+    #     timing=True, 
+    #     printing="Parallel Expectimax")
+
+    run_and_record_expectimax(n=100)
