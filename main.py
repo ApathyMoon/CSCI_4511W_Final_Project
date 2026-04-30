@@ -111,14 +111,61 @@ class Config(object)
 
 import pylatro
 import expectimax
+import mcts
 import time
 import csv
 import multiprocessing
 
+def mcts_worker_task(task_id):
+    game = pylatro.GameEngine()
+    start = time.perf_counter()
+
+    nodes = 0
+    while not game.is_over:
+        iterations = 10000
+        best_action = mcts.mcts_search(game, iterations)
+        print("action:", best_action)
+        game.handle_action(best_action)
+        nodes += iterations
+    end = time.perf_counter()
+    runtime = end - start
+    num_plays = 0
+    num_discards = 0
+    for action in game.state.action_history:
+        if "Play" in str(action):
+            num_plays += 1
+        if "Discard" in str(action):
+            num_discards += 1
+    print(f"Game {task_id} finished")
+    return task_id, game.state.score, game.state.round, num_plays, num_discards, len(game.state.action_history), nodes, round(runtime, 4), game.is_win
+
+def run_and_record_mcts(n=100):
+    header = ['id,', 'score', 'round', 'plays', 'discards', 'action_history_length', 'nodes_expanded', 'runtime', 'win']
+    num_threads = 32
+
+    with multiprocessing.Pool(processes=num_threads) as pool:
+        results = pool.map(mcts_worker_task, range(n))
+
+        with open('mcts_results.csv', 'w', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(header)
+
+            for (id, score, round, plays, discards, action_len, nodes, runtime, win) in results:
+                writer.writerow([
+                    id,
+                    score, 
+                    round, 
+                    plays, 
+                    discards, 
+                    action_len, 
+                    nodes, 
+                    runtime,
+                    win])
+
 def expectimax_worker_task(task_id):
     game = pylatro.GameEngine()
     start = time.perf_counter()
-    state, win, nodes = expectimax.run_expectimax(game, depth=5, sample=16)
+    state, win, nodes = expectimax.run_expectimax(game, depth=2, sample=-1)
     end = time.perf_counter()
     runtime = end - start
     num_plays = 0
@@ -155,14 +202,6 @@ def run_and_record_expectimax(n=100):
                     win])
 
 if __name__ == "__main__":
-    # config = pylatro.Config()
-    # config.ante_end = 1
-    # run_expectimax_once(
-    #     expectimax_parallel.run_expectimax, 
-    #     config=config, 
-    #     depth=3, 
-    #     sample=8, 
-    #     timing=True, 
-    #     printing="Parallel Expectimax")
+    # run_and_record_expectimax(n=1)
+    run_and_record_mcts(n=100)
 
-    run_and_record_expectimax(n=100)

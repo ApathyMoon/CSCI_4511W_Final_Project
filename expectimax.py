@@ -27,7 +27,7 @@ def run_expectimax(game, depth=2, sample=10):
     while not game.is_over:
         actions = game.gen_actions()
         actions = [a for a in actions if "MoveCard" not in str(a)]
-        actions.sort(key=lambda a: fast_eval(game, a), reverse=True)
+        # actions.sort(key=lambda a: fast_eval(game, a), reverse=True)
         actions = actions if sample == -1 else actions[:sample]
 
         best_score = -float('inf')
@@ -62,7 +62,7 @@ def max_value(game, depth, sample):
     best = -float('inf')
     actions = game.gen_actions()
     actions = [a for a in actions if "MoveCard" not in str(a)]
-    actions.sort(key=lambda a: fast_eval(game, a), reverse=True)
+    # actions.sort(key=lambda a: fast_eval(game, a), reverse=True)
     actions = actions if sample == -1 else actions[:sample]
 
     for action in actions:
