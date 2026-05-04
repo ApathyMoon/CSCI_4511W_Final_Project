@@ -202,6 +202,6 @@ def run_and_record_expectimax(n=100):
                     win])
 
 if __name__ == "__main__":
-    # run_and_record_expectimax(n=1)
-    run_and_record_mcts(n=100)
+    run_and_record_expectimax(n=100)
+    # run_and_record_mcts(n=100)
 
